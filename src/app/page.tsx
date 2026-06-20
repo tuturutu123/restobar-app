@@ -1,33 +1,35 @@
-import { prisma } from '@/lib/prisma'
-import MenuCategoria from '@/components/MenuCategoria'
-import WhatsAppButton from '@/components/WhatsAppButton'
+export default function HomePage() {
+  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const hoy = dias[new Date().getDay()];
 
-export default async function HomePage() {
-  const productos = await prisma.producto.findMany({
-    orderBy: { nombre: 'asc' },
-  })
+  const promos = {
+    'Jueves': { plato: 'Tacos Libres', extra: 'Pizza Libre' },
+    'Viernes': { plato: 'Milanesa Libre', extra: 'Pizza Libre' },
+    'Sábado': { plato: 'Milanesa Libre', extra: 'Pizza Libre' },
+    'Domingo': { plato: 'Hamburguesa Libre', extra: 'Pizza Libre' },
+    'Lunes': { plato: 'Papas Libres + Sándwich', extra: 'Pizza Libre' },
+  };
 
-  // Obtenemos las categorías únicas que existen en tu base de datos
-  // Esto evita que tengamos que escribir las categorías a mano
-  const categoriasUnicas = Array.from(new Set(productos.map(p => p.categoria)))
+  const promoHoy = promos[hoy as keyof typeof promos];
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      <header className="bg-gray-900 border-b border-amber-500/30 sticky top-0 z-40 p-4">
-        <h1 className="text-2xl font-bold text-amber-400 text-center">🍻 El Restobar</h1>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {categoriasUnicas.map((categoria) => (
-          <MenuCategoria
-            key={categoria}
-            categoria={categoria}
-            productos={productos.filter((p) => p.categoria === categoria)}
-          />
-        ))}
-      </div>
-
-      <WhatsAppButton />
+    <main className="p-8 text-center bg-zinc-900 text-white min-h-screen">
+      <h1 className="text-4xl font-bold mb-4">Sisu Resto Bar</h1>
+      {promoHoy ? (
+        <div className="border-2 border-orange-500 p-6 rounded-xl">
+          <h2 className="text-2xl text-orange-500">Hoy {hoy}</h2>
+          <p className="text-3xl font-bold">{promoHoy.plato}</p>
+          <p className="text-xl">+ {promoHoy.extra}</p>
+        </div>
+      ) : (
+        <p>Hoy no tenemos promo libre, ¡consultanos por el menú!</p>
+      )}
+      <a 
+        href="https://wa.me/5492657211497" 
+        className="mt-8 block bg-green-600 p-4 rounded-lg font-bold"
+      >
+        Reservar por WhatsApp
+      </a>
     </main>
-  )
+  );
 }

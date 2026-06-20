@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { ProductoSchema } from '@/lib/validations'
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-
-  const { id } = await params 
-
+  const { id } = await params
+  const body = await req.json()
+  
   try {
-    const body = await req.json()
-    const parsed = ProductoSchema.partial().safeParse(body)
-    
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
-    }
-
     const producto = await prisma.producto.update({
-      where: { id }, 
-      data: parsed.data,
+      where: { id },
+      data: body,
     })
     return NextResponse.json(producto)
   } catch {
@@ -28,11 +17,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-
   const { id } = await params
-
+  
   try {
     await prisma.producto.delete({ where: { id } })
     return NextResponse.json({ mensaje: 'Producto eliminado' })

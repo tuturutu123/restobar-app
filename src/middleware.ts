@@ -4,28 +4,15 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   
-  // Obtener solo el token, sin cargar toda la lógica de Prisma
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET 
-  })
-
-  const isAuthenticated = !!token
-
-  // Rutas que requieren autenticación
-  const protectedRoutes = ['/admin']
-  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r))
-
-  if (isProtected && !isAuthenticated) {
-    const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
+  // Si intentan entrar a /admin sin estar logueados, los manda al login
+  if (pathname.startsWith('/admin') && !token) {
+    return NextResponse.redirect(new URL('/login', req.url))
   }
-
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/productos/:path*'],
+  matcher: ['/admin/:path*'],
 }
