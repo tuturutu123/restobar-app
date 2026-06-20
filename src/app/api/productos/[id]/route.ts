@@ -3,12 +3,12 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ProductoSchema } from '@/lib/validations'
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  // Mantenemos el ID como string, porque en el schema es CUID (string)
-  const id = params.id 
+  // Esperamos a que los params se resuelvan
+  const { id } = await params 
 
   try {
     const body = await req.json()
@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const producto = await prisma.producto.update({
-      where: { id }, // Ahora esto coincide perfectamente con tu schema
+      where: { id }, 
       data: parsed.data,
     })
     return NextResponse.json(producto)
@@ -28,11 +28,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const id = params.id
+  // Esperamos a que los params se resuelvan
+  const { id } = await params
 
   try {
     await prisma.producto.delete({ where: { id } })
