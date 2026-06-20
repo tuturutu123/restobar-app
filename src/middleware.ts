@@ -1,9 +1,17 @@
-import { auth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const isAuthenticated = !!req.auth
+  
+  // Obtener solo el token, sin cargar toda la lógica de Prisma
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET 
+  })
+
+  const isAuthenticated = !!token
 
   // Rutas que requieren autenticación
   const protectedRoutes = ['/admin']
@@ -16,9 +24,8 @@ export default auth((req) => {
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
-  // Aplica middleware a estas rutas (excluye assets estáticos)
   matcher: ['/admin/:path*', '/api/productos/:path*'],
 }
