@@ -7,7 +7,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  // Esperamos a que los params se resuelvan
   const { id } = await params 
 
   try {
@@ -32,7 +31,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  // Esperamos a que los params se resuelvan
   const { id } = await params
 
   try {
