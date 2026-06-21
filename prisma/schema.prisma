@@ -13,7 +13,7 @@ model Producto {
   descripcion String?  
   precio      Float
   categoria   String   
-  imagen      String?  
+  imagenUrl   String?  // Nombre unificado y coherente
   disponible  Boolean  @default(true)
   createdAt   DateTime @default(now())
 }
