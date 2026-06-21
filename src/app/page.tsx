@@ -1,17 +1,23 @@
 import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
 
-export default function HomePage() {
+// Definimos la estructura del producto para que TypeScript no se queje
+interface Producto {
+  nombre: string;
+  precio: number | string;
+  imagenUrl: string | null;
+  categoria: string;
+}
+
+export default async function HomePage() {
+  // Obtenemos los productos desde la base de datos
+  const productos = await prisma.producto.findMany();
+  
+  // Lógica para filtrar el producto que corresponde hoy
   const hoy = new Date().toLocaleDateString('es-AR', { weekday: 'long' });
   
-  const promos = {
-    'jueves': { plato: 'Tacos Libres', extra: 'Pizza Libre', precio: '$14.000', img: '/promos/jueves.jpg' },
-    'viernes': { plato: 'Milanesa Libre', extra: 'Pizza Libre', precio: '$12.000', img: '/promos/viernes.jpg' },
-    'sábado': { plato: 'Milanesa Libre', extra: 'Pizza Libre', precio: '$12.000', img: '/promos/sabado.jpg' },
-    'domingo': { plato: 'Hamburguesa Libre', extra: 'Pizza Libre', precio: '$12.000', img: '/promos/domingo.jpg' },
-    'lunes': { plato: 'Papas Libres + Sándwich', extra: 'Pizza Libre', precio: '$12.000', img: '/promos/lunes.jpg' },
-  };
-
-  const promoHoy = promos[hoy as keyof typeof promos];
+  // Buscamos el producto y forzamos el tipo Producto para evitar errores de rojo
+  const promoHoy = productos.find(p => p.categoria.toLowerCase() === hoy.toLowerCase()) as Producto | undefined;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white font-sans p-6">
@@ -23,12 +29,17 @@ export default function HomePage() {
       {promoHoy ? (
         <section className="max-w-md mx-auto bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl">
           <h2 className="text-orange-500 font-bold mb-4 uppercase text-center tracking-widest">Hoy {hoy}</h2>
-          {/* Aquí se cargará la imagen de tu promo */}
+          
           <div className="relative w-full h-64 mb-6">
-             <Image src={promoHoy.img} alt={promoHoy.plato} fill className="object-cover rounded-2xl" />
+             <Image 
+               src={promoHoy.imagenUrl || '/fallback.jpg'} 
+               alt={promoHoy.nombre} 
+               fill 
+               className="object-cover rounded-2xl" 
+             />
           </div>
-          <h3 className="text-3xl font-black text-center">{promoHoy.plato}</h3>
-          <p className="text-center text-zinc-400 my-2">+ {promoHoy.extra}</p>
+          
+          <h3 className="text-3xl font-black text-center">{promoHoy.nombre}</h3>
           <p className="text-center text-2xl font-bold text-orange-400 mt-4">{promoHoy.precio}</p>
           
           <a href="https://wa.me/5492657211497" className="mt-8 flex justify-center items-center bg-green-600 hover:bg-green-700 py-4 rounded-2xl font-bold transition">
@@ -36,7 +47,9 @@ export default function HomePage() {
           </a>
         </section>
       ) : (
-        <p className="text-center">Consultanos por el menú del día.</p>
+        <section className="text-center p-10">
+          <p className="text-zinc-400">Cargando la promo de hoy o no hay promo disponible...</p>
+        </section>
       )}
 
       <footer className="max-w-md mx-auto mt-10 p-6 bg-zinc-900 rounded-2xl border border-zinc-800">

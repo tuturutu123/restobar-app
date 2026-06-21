@@ -1,28 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const body = await req.json()
-  
-  try {
-    const producto = await prisma.producto.update({
-      where: { id },
-      data: body,
-    })
-    return NextResponse.json(producto)
-  } catch {
-    return NextResponse.json({ error: 'Error al actualizar' }, { status: 404 })
-  }
+// Obtener todos los productos
+export async function GET() {
+  const productos = await prisma.producto.findMany();
+  return NextResponse.json(productos);
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  
+// Crear un nuevo producto (para tu Admin)
+export async function POST(req: Request) {
   try {
-    await prisma.producto.delete({ where: { id } })
-    return NextResponse.json({ mensaje: 'Producto eliminado' })
-  } catch {
-    return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
+    const body = await req.json();
+    const producto = await prisma.producto.create({
+      data: {
+        nombre: body.nombre,
+        precio: Number(body.precio),
+        imagenUrl: body.imagenUrl,
+        categoria: body.categoria, // Ejemplo: "jueves", "viernes", etc.
+      },
+    });
+    return NextResponse.json(producto, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error al crear producto' }, { status: 500 });
   }
 }
