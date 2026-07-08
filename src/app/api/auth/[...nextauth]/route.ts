@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -14,41 +14,29 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Le decimos a TypeScript: "Tranquilo, esto es un texto seguro"
         const email = credentials?.email as string
         const password = credentials?.password as string
 
-        if (!email || !password) {
-          return null
-        }
+        if (!email || !password) return null
 
-        // Busca al usuario en la base de datos de Neon
         const user = await prisma.usuario.findUnique({
           where: { email: email }
         })
 
-        if (!user) {
-          return null
-        }
+        if (!user) return null
 
-        // Compara la contraseña encriptada
         const passwordMatch = await bcrypt.compare(password, user.password)
 
-        if (!passwordMatch) {
-          return null
-        }
+        if (!passwordMatch) return null
 
         return { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol }
       }
     })
   ],
-  session: {
-    strategy: "jwt",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: '/login',
-  }
-})
+  session: { strategy: "jwt" as const },
+  secret: process.env.NEXTAUTH_SECRET || "secreto_de_respaldo_sisu_123",
+  pages: { signIn: '/login' }
+}
 
+const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }
